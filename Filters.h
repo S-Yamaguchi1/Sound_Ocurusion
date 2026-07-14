@@ -1,5 +1,5 @@
-// 自作ローパスフィルタ群（エンジン非依存・ヘッダのみ）
-// インパルス応答をFFTして振幅特性を検証済み: Docs/frequency_response.png
+// ローパスフィルタ
+// インパルス応答をFFTした結果はDocs/frequency_response.pngに保存
 #pragma once
 #include <cmath>
 
@@ -7,7 +7,7 @@ namespace dsp
 {
     constexpr float kPi = 3.14159265358979323846f;
 
-    // 1次 1ポール・ローパス。-6 dB/oct。最も軽量。
+    // 1次 1ポール・ローパス。-6 dB/oct。
     struct OnePoleLPF
     {
         float z  = 0.0f;
@@ -25,8 +25,8 @@ namespace dsp
         }
     };
 
-    // 2次 Biquad ローパス（RBJ Cookbook 係数 / Direct Form I）。-12 dB/oct。
-    // Q = 0.707 でバターワース特性（カットオフで -3 dB、平坦な通過域）。
+    // 2次 Biquad ローパス
+    // Q = 0.707 でバターワース（カットオフで -3 dB）　
     struct BiquadLPF
     {
         float b0=1, b1=0, b2=0, a1=0, a2=0;
@@ -60,11 +60,11 @@ namespace dsp
         }
     };
 
-    // State Variable Filter（台形積分 / TPT）。
+    // State Variable Filte
     //
-    // 本オクルージョンシステムが実際に使用するフィルタ。リスナーの移動に伴い
-    // カットオフが毎フレーム変調されるため、係数の急激な変化に対して数値的に
-    // 安定な TPT 構造を採用した（Direct Form の Biquad は高速変調で破綻しやすい）。
+    // 
+    // 採用したふぃるた
+    // TPT 構造を採用したDirect Form の Biquad は安定しない
     struct SvfTPT
     {
         float g=0, k=1, a1=0, a2=0, a3=0;
@@ -84,7 +84,7 @@ namespace dsp
 
         void Reset() { ic1 = ic2 = 0.0f; }
 
-        // ローパス出力。必要ならハイパスは v0 - k*v1 - v2 で同時に取得できる。
+        // 出力。必要ならハイパスは v0 - k*v1 - v2 で同時に取得
         float Process(float v0)
         {
             const float v3 = v0  - ic2;
@@ -96,4 +96,5 @@ namespace dsp
         }
     };
 
-} // namespace dsp
+}
+ // namespace dsp

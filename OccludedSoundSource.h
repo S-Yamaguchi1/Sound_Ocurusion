@@ -16,7 +16,7 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Audio")
     class UAudioComponent* AudioComponent;
 
-    // 音源→リスナーのトレース線と、算出値のオンスクリーン表示を有効にする
+    // 音源からリスナーの線と、算出値のオンスクリーン表示を有効に
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Occlusion|Debug")
     bool bShowDebug = true;
 

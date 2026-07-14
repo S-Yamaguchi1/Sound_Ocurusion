@@ -1,5 +1,5 @@
-// 自作SVFローパスを音源に適用するカスタム Source Effect。
-// フィルタのカットオフ/ゲインは、ゲームスレッドが算出した遮蔽パラメータで駆動される。
+// ローパスを音源に適用するカスタム Source Effect。
+// フィルタのカットオフとゲインはゲームスレッドが算出した遮蔽パラメータでうごく。
 #pragma once
 
 #include "CoreMinimal.h"
@@ -17,13 +17,13 @@ struct FOcclusionSourceEffectSettings
               meta = (ClampMin = "50.0", ClampMax = "20000.0"))
     float DefaultCutoffHz = 20000.0f;
 
-    // カットオフ/ゲイン変化の平滑化時定数。ジッパーノイズを防ぐ。
+    // カットオフとゲイン変化の平滑化時定数
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Occlusion",
               meta = (ClampMin = "0.0", ClampMax = "500.0"))
     float SmoothingTimeMs = 50.0f;
 };
 
-// オーディオレンダースレッド上で動作する
+// オーディオレンダースレッド上で動作
 class FOcclusionSourceEffect : public FSoundEffectSource
 {
 public:
@@ -43,7 +43,7 @@ private:
     float TargetGain    = 1.0f;
     float CurrentGain   = 1.0f;
 
-    TArray<dsp::SvfTPT> Filters; // チャンネルごとに1つ
+    TArray<dsp::SvfTPT> Filters; // チャンネルごとに1つ設定する
 };
 
 UCLASS()

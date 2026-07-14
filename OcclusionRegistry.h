@@ -40,7 +40,7 @@ public:
     }
 
 private:
-    // ロックが保護するのは float 2つのコピー
+    // ロックが保護するのは float 2つのコピーのみ
     mutable FCriticalSection Mutex;
     TMap<uint64, FOcclusionParams> Map;
 };

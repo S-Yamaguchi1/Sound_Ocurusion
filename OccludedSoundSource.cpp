@@ -15,20 +15,19 @@ namespace
 {
     constexpr float  kMaxCutoffHz      = 20000.0f; // 遮蔽なし
     constexpr float  kMinCutoffHz      = 150.0f;   // どれだけ厚くてもこれ以下にしない
-    constexpr float  kThicknessScaleCm = 40.0f;    // カットオフが 1/e になる実効厚み
+    constexpr float  kThicknessScaleCm = 40.0f;    // カットオフが 1/e になる実際の厚み
     constexpr float  kGainDbPerCm      = 0.15f;    // 実効厚み1cmあたりの減衰量
     constexpr float  kMinGainDb        = -24.0f;
     constexpr uint64 kDemoSourceKey    = 0;        // Source Effect 側と共通のキー
 }
 
-// 音源→リスナーの直線が通過する固体の「実効厚み」を測定する。
+// 音源からリスナーへ直線が通過する固体の「実効厚み」を測定。
 //
-// 順方向のマルチトレースで各壁の「入口」、逆方向のマルチトレースで「出口」が得られる。
-// 双方を距離順に並べて対応づけると、各壁を貫通した区間長が求まる。
-// 各区間にその面の音響密度を掛けることで、同じ50cmでもコンクリートはカーテンより
-// はるかに強く遮蔽される、という材質差を表現する。
+// 順方向のマルチトレースで各壁の入口、逆方向のマルチトレースで出口を取得。
+// 
+// 各区間にその面の音響密度を掛けることで、材質差を表現する。
 //
-// OutRawCm には材質を考慮しない幾何的な厚みを返す（デバッグ表示用）。
+// OutRawCm には材質を考慮しない厚みを返す　デバッグ用。
 static float ComputeEffectiveThicknessCm(UWorld* World, const FVector& Start, const FVector& End,
                                          const FCollisionQueryParams& Query, float& OutRawCm)
 {
@@ -42,7 +41,7 @@ static float ComputeEffectiveThicknessCm(UWorld* World, const FVector& Start, co
 
     for (const FHitResult& Hit : Forward)
     {
-        float Density = 1.0f; // 音響マテリアル未設定の面は中立(1.0)として扱う
+        float Density = 1.0f; // 音響マテリアル未設定の面は1.0として扱う　場合のよって変更
         if (const UAcousticPhysicalMaterial* Material =
                 Cast<UAcousticPhysicalMaterial>(Hit.PhysMaterial.Get()))
         {
@@ -107,7 +106,7 @@ void AOccludedSoundSource::Tick(float DeltaTime)
 
     FCollisionQueryParams Query;
     Query.AddIgnoredActor(this);
-    Query.bReturnPhysicalMaterial = true; // 音響マテリアルの取得に必須
+    Query.bReturnPhysicalMaterial = true; // 音響マテリアルの取得に必要
     if (APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0))
     {
         Query.AddIgnoredActor(PlayerPawn);
@@ -117,7 +116,7 @@ void AOccludedSoundSource::Tick(float DeltaTime)
     const float EffectiveCm =
         ComputeEffectiveThicknessCm(World, SourceLocation, ListenerLocation, Query, RawCm);
 
-    // 実効厚みからフィルタパラメータへ写像する（簡略化した質量則）。
+    // 実効厚みからフィルタパラメータへ移す）。
     // カットオフは厚みに対して指数的に低下し、ゲインはdBで線形に減衰する。
     FOcclusionParams Params;
     Params.CutoffHz = FMath::Clamp(
@@ -127,7 +126,7 @@ void AOccludedSoundSource::Tick(float DeltaTime)
     const float GainDb = FMath::Max(-EffectiveCm * kGainDbPerCm, kMinGainDb);
     Params.LinearGain = FMath::Pow(10.0f, GainDb / 20.0f);
 
-    // オーディオレンダースレッドへ受け渡す
+    // オーディオのスレッドへ渡す
     FOcclusionRegistry::Get().SetParams(kDemoSourceKey, Params);
 
     if (bShowDebug)
